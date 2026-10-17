@@ -94,7 +94,8 @@ export function extractPieces(scene: Object3D): Geometries | null {
     const c = g.boundingBox!.getCenter(new Vector3())
     g.translate(-c.x, -g.boundingBox!.min.y, -c.z)
     g.scale(scale, scale, scale)
-    g.computeVertexNormals()
+    // 균일 스케일이라 모델의 부드러운 법선을 그대로 쓴다 (다시 계산하면 면이 각져 보인다)
+    if (!g.getAttribute('normal')) g.computeVertexNormals()
     g.computeBoundingBox()
     g.computeBoundingSphere()
   }
