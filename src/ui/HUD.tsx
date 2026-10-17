@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import type { ChessGame } from '../hooks/useChessGame'
 import { hoverStore } from '../hooks/useChessGame'
 import { useStore } from '../hooks/store'
+import { useSettings } from '../hooks/settings'
+import { DIFFICULTY_LABEL } from './NewGameDialog'
 
 export function formatClock(ms: number): string {
   const s = Math.floor(ms / 1000)
@@ -31,8 +33,9 @@ function Clocks({ g }: { g: ChessGame }) {
   )
 }
 
-export function TurnPanel({ g }: { g: ChessGame }) {
+export function TurnPanel({ g, onNewGame }: { g: ChessGame; onNewGame: () => void }) {
   const { turn, status, aiThinking, end, config } = g
+  const { difficulty } = useSettings()
   const name = (c: 'w' | 'b') => {
     const base = c === 'w' ? '백' : '흑'
     if (config.mode !== 'ai') return base
@@ -50,6 +53,10 @@ export function TurnPanel({ g }: { g: ChessGame }) {
       <h1 className="brand">
         Staunton <em>3D</em>
       </h1>
+      <button className="match-badge" onClick={onNewGame} title="대국 상대 바꾸기">
+        {config.mode === 'ai' ? `vs 컴퓨터 · ${DIFFICULTY_LABEL[difficulty]}` : '2인 대전'}
+        <span aria-hidden> ▾</span>
+      </button>
       <div className={`turn ${status.isCheck && !status.isCheckmate ? 'turn--check' : ''}`}>
         <span className={`dot dot--${turn}`} />
         <span>{line}</span>
@@ -70,7 +77,7 @@ export function HoverCoordinate() {
   )
 }
 
-export function Toolbar({ g }: { g: ChessGame }) {
+export function Toolbar({ g, onNewGame }: { g: ChessGame; onNewGame: () => void }) {
   return (
     <nav className="toolbar panel" aria-label="시점과 대국">
       <div className="toolbar__group">
@@ -88,7 +95,7 @@ export function Toolbar({ g }: { g: ChessGame }) {
         <button className="btn" onClick={g.undo} disabled={g.game.moves.length === 0}>
           <span className="btn__icon">↶</span> 무르기
         </button>
-        <button className="btn btn--primary" onClick={g.newGame}>
+        <button className="btn btn--primary" onClick={onNewGame}>
           새 게임
         </button>
       </div>

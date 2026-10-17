@@ -1,12 +1,16 @@
 // 결과 패널: 승자·수 개수·대국 시간·다시하기
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ChessGame } from '../hooks/useChessGame'
 import { DRAW_REASON_TEXT } from './help/rulesText.ko'
 import { formatClock } from './HUD'
 
-export function ResultPanel({ g }: { g: ChessGame }) {
+export function ResultPanel({ g, onNewGame }: { g: ChessGame; onNewGame: () => void }) {
   const [hidden, setHidden] = useState(false)
   const end = g.end
+  // 새 대국이 시작되면 '보드 보기'로 숨긴 상태를 되돌린다
+  useEffect(() => {
+    if (!end) setHidden(false)
+  }, [end])
   if (!end || end.stage !== 'result') return null
   if (hidden) {
     return (
@@ -57,6 +61,9 @@ export function ResultPanel({ g }: { g: ChessGame }) {
         <div className="result__actions">
           <button className="btn btn--primary" onClick={g.newGame}>
             다시하기
+          </button>
+          <button className="btn" onClick={onNewGame}>
+            상대 바꾸기
           </button>
           <button className="btn btn--ghost" onClick={() => setHidden(true)}>
             보드 보기

@@ -78,7 +78,7 @@ function StudyEnvironment() {
       <Lightformer form="rect" intensity={2.2} color="#ffcf9a" position={[0, 6, 0]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} />
       <Lightformer form="rect" intensity={1.2} color="#ffb070" position={[6, 2, 4]} rotation-y={-Math.PI / 3} scale={[4, 3, 1]} />
       <Lightformer form="rect" intensity={0.6} color="#a8b8ff" position={[-6, 2, -4]} rotation-y={Math.PI / 3} scale={[4, 3, 1]} />
-      <Lightformer form="ring" intensity={1.5} color="#ffe1b0" position={[0, 3, 7]} scale={2} />
+      <Lightformer form="ring" intensity={0.6} color="#ffe1b0" position={[0, 3, 7]} scale={2} />
     </Environment>
   )
 }

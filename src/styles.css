@@ -991,6 +991,78 @@ button.piece-card:hover {
   }
 }
 
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--paper-edge);
+  background: rgba(212, 169, 58, 0.18);
+  color: var(--brass-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.match-badge:hover {
+  background: rgba(212, 169, 58, 0.32);
+}
+
+.newgame__modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--paper-edge);
+  background: #fffaf0;
+  cursor: pointer;
+}
+
+.mode-card:hover {
+  border-color: var(--brass-dark);
+}
+
+.mode-card.on {
+  border-color: var(--brass-dark);
+  background: linear-gradient(180deg, #fff4d8, #f6e2b0);
+  box-shadow: inset 0 0 0 2px var(--brass);
+}
+
+.mode-card:focus-visible {
+  outline: 2px solid var(--brass-dark);
+  outline-offset: 2px;
+}
+
+.mode-card__icon {
+  font-family: var(--symbols);
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.mode-card__title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.mode-card__text {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.newgame__hint {
+  margin: 6px 0 0 !important;
+}
+
 .promo-choices {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1146,6 +1218,7 @@ button.piece-card:hover {
 .loading--done {
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
 }
 
 .loading__inner {

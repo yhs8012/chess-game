@@ -8,6 +8,8 @@ import { HoverCoordinate, Toolbar, TurnPanel } from './ui/HUD'
 import { MoveHistory } from './ui/MoveHistory'
 import { PromotionDialog } from './ui/PromotionDialog'
 import { ResultPanel } from './ui/ResultPanel'
+import { NewGameDialog } from './ui/NewGameDialog'
+import { loadFlag, saveFlag } from './hooks/store'
 import { Settings } from './ui/Settings'
 import { HelpButton } from './ui/help/HelpButton'
 import { HelpPanel } from './ui/help/HelpPanel'
@@ -37,6 +39,10 @@ function Loading({ show }: { show: boolean }) {
 export default function App() {
   const g = useChessGame()
   const [loading, setLoading] = useState(true)
+  // 처음 실행이면 대국 상대를 고르는 창부터 보여 준다
+  const [firstRun] = useState(() => !loadFlag('chess3d.started'))
+  const [newGameOpen, setNewGameOpen] = useState(firstRun)
+  const openNewGame = () => setNewGameOpen(true)
 
   useEffect(() => {
     initAudio()
@@ -61,19 +67,33 @@ export default function App() {
 
       <div className="hud">
         <div className="hud__left">
-          <TurnPanel g={g} />
+          <TurnPanel g={g} onNewGame={openNewGame} />
           <MoveHistory g={g} />
         </div>
         <Settings g={g} />
         <HoverCoordinate />
-        <Toolbar g={g} />
+        <Toolbar g={g} onNewGame={openNewGame} />
         <HelpButton open={g.helpOpen} setOpen={g.setHelpOpen} />
       </div>
 
       <HelpPanel g={g} />
       <CheckFlash />
       {promotionColor && <PromotionDialog color={promotionColor} onChoose={g.choosePromotion} />}
-      <ResultPanel g={g} />
+      <ResultPanel g={g} onNewGame={openNewGame} />
+      {newGameOpen && !loading && (
+        <NewGameDialog
+          first={firstRun && !loadFlag('chess3d.started')}
+          onClose={() => {
+            saveFlag('chess3d.started')
+            setNewGameOpen(false)
+          }}
+          onStart={() => {
+            saveFlag('chess3d.started')
+            setNewGameOpen(false)
+            g.newGame()
+          }}
+        />
+      )}
       <Loading show={loading} />
     </div>
   )
