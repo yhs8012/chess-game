@@ -58,7 +58,7 @@ describe('기본 이동과 불변 상태', () => {
     const r = mv(s0, 'e2', 'e5')
     expect(r.ok).toBe(false)
     expect(r.state).toBe(s0)
-    expect(r.events).toEqual([{ type: 'invalid', from: 'e2', to: 'e5' }])
+    expect(r.events).toEqual([{ type: 'invalid', from: 'e2', to: 'e5', piece: 'p' }])
   })
 
   it('자기 킹을 체크에 노출하는 수(자살수)는 둘 수 없다', () => {

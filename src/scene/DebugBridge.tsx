@@ -4,12 +4,13 @@ import { useThree } from '@react-three/fiber'
 import type { Square } from 'chess.js'
 import { BOARD_TOP, squareToWorld } from './coords'
 import type { ChessGame } from '../hooks/useChessGame'
+import { woodMaps } from './woodTextures'
 
 export const DEBUG = typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug')
 
 declare global {
   interface Window {
-    __chess?: { g: ChessGame; screenOf: (sq: Square, y?: number) => { x: number; y: number } }
+    __chess?: { g: ChessGame; screenOf: (sq: Square, y?: number) => { x: number; y: number }; wood?: unknown; gl?: unknown }
   }
 }
 
@@ -18,6 +19,8 @@ export function DebugBridge({ g }: { g: ChessGame }) {
   useEffect(() => {
     window.__chess = {
       g,
+      wood: woodMaps(),
+      gl,
       screenOf(sq, y = BOARD_TOP + 0.01) {
         const v = squareToWorld(sq, y).project(camera)
         const r = gl.domElement.getBoundingClientRect()

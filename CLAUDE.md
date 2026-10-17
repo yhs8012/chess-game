@@ -346,14 +346,16 @@ npm run build
 
 ## 11. 남은 확인 사항
 
-- [ ] CC0 효과음 파일로 교체할지 (지금은 합성음)
-- [ ] CC0 PBR 나무 텍스처로 교체할지 (지금은 절차적 텍스처)
+- [ ] (선택) 실제 녹음 CC0 효과음·CC0 나무 사진 텍스처로 교체 — 클라우드 개발 환경에서 kenney.nl·ambientcg.com·polyhaven.com·freesound.org 접근이 막혀 있어 보류. 파일만 넣으면 교체되도록 준비돼 있다(`public/sounds/`, `scripts/` 참고)
 
 ## 12. 구현 메모 (명세와 다르게 한 부분과 이유)
 
 - **애니메이션**: react-spring 대신 `useFrame` 안에서 직접 보간한다. 포물선·지연·잡힘→트레이 같은 단계형 연출을 한 곳에서 제어하기 쉽다. 시간표는 `effects/timing.ts` 하나에 모아 사운드와 맞춘다.
 - **환경광**: drei `Environment`의 HDR 프리셋은 외부 CDN에서 파일을 받으므로, 같은 `Environment`에 `Lightformer`로 실내 조명을 직접 구성했다 (네트워크 없이 동작).
-- **나무 텍스처**: CC0 PBR 파일 대신 캔버스로 나뭇결을 생성한다 (`scene/materials.ts`). 파일이 정해지면 교체.
+- **나무 텍스처**: `scene/woodTextures.ts`가 시작할 때 GPU 셰이더로 수종별 색·노멀·거칠기 맵을 생성한다(나이테 춘재/추재, 판재 무늬, 섬유, 도관, 메이플 곱슬결, 마호가니 리본). 칸마다 텍스처의 다른 부분(UV 창)과 결 방향을 써서 실제 조각 나무처럼 보인다. 실패하면 캔버스 나뭇결로 대체.
+  - 주의: RawShaderMaterial의 `uniforms` 객체는 한 번 만들고 `.value`만 바꿀 것(객체를 갈아 끼우면 컴파일된 프로그램이 옛 값을 쓴다).
+  - 색 맵은 셰이더에서 sRGB로 인코딩해 읽어 온 뒤 `DataTexture`(sRGB)로 올린다 — 렌더 타깃 색 공간 처리에 기대지 않는다.
+- **효과음**: `audio/synth.ts`가 모달 합성으로 만든다 — 나무 보드·기물의 진동 모드 + 접촉 잡음, 기물 무게별 음높이, 매번 약간 다른 흔들림, 방(RT60≈0.7s)·홀(≈2s) 두 가지 합성 잔향, 소프트 클리퍼. `renderSound()`로 오프라인 렌더링해 피크·길이를 점검할 수 있다.
 - **chess.js 이벤트 판별**: v1.4에서 `flags`가 deprecated라 `isCapture()`·`isEnPassant()`·`isKingsideCastle()` 등 descriptor 함수를 쓴다. 단 **`isCapture()`는 앙파상을 포함하지 않으므로** `engine/game.ts`의 `isCaptureMove()`로 합쳐 쓴다 (테스트로 확인).
 - **막힌 이유 툴팁**: 명세의 4가지 문구 외에, 폰이 대각선으로 갈 수 없는 경우("잡을 상대 말이 있을 때만")와 앞이 막힌 경우를 위한 폰 전용 문구를 추가했다. 그렇지 않으면 "킹이 체크당해요"로 잘못 안내된다.
 - **승리 발광**: 재질을 바꿔 끼우면 셰이더 재컴파일로 화면이 순간 멈추므로, 회양목·흑단 재질의 `emissiveIntensity`만 올린다.

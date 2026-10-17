@@ -192,7 +192,8 @@ export function applyMove(state: GameState, input: MoveInput): MoveResult {
   try {
     move = chess.move({ from: input.from, to: input.to, promotion: input.promotion })
   } catch {
-    return { ok: false, state, events: [{ type: 'invalid', from: input.from, to: input.to }] }
+    const piece = chess.get(input.from)?.type
+    return { ok: false, state, events: [{ type: 'invalid', from: input.from, to: input.to, ...(piece && { piece }) }] }
   }
   const next: GameState = { startFen: state.startFen, moves: [...state.moves, move], fen: chess.fen() }
   cache.set(next, chess)

@@ -17,7 +17,7 @@ export interface MoveInfo {
 }
 
 export type GameEvent =
-  | { type: 'select'; square: Square }
+  | { type: 'select'; square: Square; piece?: PieceSymbol }
   | { type: 'move'; move: MoveInfo }
   | { type: 'capture'; move: MoveInfo; captured: PieceSymbol; capturedSquare: Square; enPassant: boolean }
   | { type: 'castle'; move: MoveInfo; side: 'k' | 'q'; rookFrom: Square; rookTo: Square }
@@ -25,7 +25,7 @@ export type GameEvent =
   | { type: 'check'; color: Color; kingSquare: Square }
   | { type: 'checkmate'; loser: Color; winner: Color; kingSquare: Square }
   | { type: 'draw'; reason: DrawReason }
-  | { type: 'invalid'; from: Square; to: Square }
+  | { type: 'invalid'; from: Square; to: Square; piece?: PieceSymbol }
 
 export type GameEventType = GameEvent['type']
 

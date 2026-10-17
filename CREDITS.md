@@ -16,14 +16,14 @@
 
 | 자원 | 출처 | 라이선스 |
 |---|---|---|
-| 메이플·월넛·마호가니·회양목·흑단·테이블 나뭇결 | 캔버스로 절차적 생성 (`src/scene/materials.ts`) | 프로젝트와 동일 |
+| 메이플·월넛·마호가니·회양목·흑단·오크 테이블 나뭇결 (색·노멀·거칠기) | GPU 셰이더로 절차적 생성 (`src/scene/woodTextures.ts`) | 프로젝트와 동일 |
 | UI 종이 질감 | SVG `feTurbulence` 노이즈 (`src/styles.css`) | 프로젝트와 동일 |
 
 ## 사운드
 
 | 자원 | 출처 | 라이선스 |
 |---|---|---|
-| 모든 효과음 (틱·톡·쾅·차임·경고음·팡파르·종소리·삑) | Web Audio API 합성음 (`src/audio/synth.ts`) | 프로젝트와 동일 |
+| 모든 효과음 (틱·톡·쾅·차임·경고음·팡파르·종소리·삑) | Web Audio API 모달 합성 + 합성 잔향 (`src/audio/synth.ts`) | 프로젝트와 동일 |
 | "Checkmate!" / "Check!" 음성 | 브라우저 내장 TTS (Web Speech API) | 사용자 OS·브라우저의 음성 |
 
 > CC0 효과음 파일은 `public/sounds/`에 넣고 `public/sounds/sounds.json`에 등록하세요.

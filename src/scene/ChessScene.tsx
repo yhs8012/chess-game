@@ -1,6 +1,6 @@
 // Canvas, 조명, 카메라, 후처리, 그리고 보드·기물·효과 배치
 import { memo, Suspense, useCallback, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Lightformer, PerformanceMonitor } from '@react-three/drei'
 import { Bloom, EffectComposer, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
@@ -28,6 +28,7 @@ import { VictoryConfetti, WinnerGlowPulse } from '../effects/VictoryConfetti'
 import { shakeAmount, worldShake } from '../effects/shake'
 import { T } from '../effects/timing'
 import { DEBUG, DebugBridge } from './DebugBridge'
+import { generateWoodMaps } from './woodTextures'
 
 /** 약 3000K 따뜻한 키 라이트 */
 const KEY_COLOR = '#ffb46b'
@@ -80,6 +81,13 @@ function StudyEnvironment() {
       <Lightformer form="ring" intensity={1.5} color="#ffe1b0" position={[0, 3, 7]} scale={2} />
     </Environment>
   )
+}
+
+/** 첫 렌더 전에 나무 텍스처를 GPU로 한 번 생성한다 (재질이 만들어지기 전에) */
+function WoodGate({ children }: { children: React.ReactNode }) {
+  const gl = useThree((s) => s.gl)
+  useState(() => generateWoodMaps(gl))
+  return <>{children}</>
 }
 
 function ShakeGroup({ children }: { children: React.ReactNode }) {
@@ -188,6 +196,7 @@ export function ChessScene({ g, onLoading }: { g: ChessGame; onLoading: (v: bool
       <CameraRig request={camera} locked={end?.kind === 'checkmate' && end.stage !== 'result'} />
       {DEBUG && <DebugBridge g={g} />}
 
+      <WoodGate>
       <ShakeGroup>
         <Board3D onHover={onHover} onClick={g.onSquareClick} />
         {settings.showLabels && (
@@ -217,6 +226,7 @@ export function ChessScene({ g, onLoading }: { g: ChessGame; onLoading: (v: bool
         {end?.kind === 'draw' && end.stage !== 'focus' && <DrawText />}
         <WinnerGlowPulse winner={end?.kind === 'checkmate' && ['victory', 'result'].includes(end.stage) ? end.winner : null} />
       </ShakeGroup>
+      </WoodGate>
 
       <EffectComposer multisampling={4}>
         <Bloom mipmapBlur luminanceThreshold={1} luminanceSmoothing={0.2} intensity={0.9} />

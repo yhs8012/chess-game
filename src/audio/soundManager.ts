@@ -6,7 +6,7 @@ import type { EventBus, GameEvent } from '../engine/events'
 import { T } from '../effects/timing'
 import { settingsStore } from '../hooks/settings'
 import { audioContext, playSynth, setSynthVolume } from './synth'
-import type { SoundName } from './synth'
+import type { SoundName, SoundOptions } from './synth'
 import { initVoice, speak } from './voice'
 
 const files = new Map<SoundName, Howl>()
@@ -43,11 +43,11 @@ async function loadManifest() {
   }
 }
 
-export function play(name: SoundName) {
+export function play(name: SoundName, opts: SoundOptions = {}) {
   if (effectiveVolume() <= 0) return
   const howl = files.get(name)
   if (howl && howl.state() === 'loaded') howl.play()
-  else playSynth(name)
+  else playSynth(name, opts)
 }
 
 function at(sec: number, fn: () => void) {
@@ -84,12 +84,15 @@ export function bindSounds(bus: EventBus<GameEvent>): () => void {
     const has = (t: GameEvent['type']) => events.some((e) => e.type === t)
 
     for (const e of events) {
-      if (e.type === 'select') play('select')
-      if (e.type === 'invalid') play('invalid')
+      if (e.type === 'select') play('select', { piece: e.piece })
+      if (e.type === 'invalid') play('invalid', { piece: e.piece })
     }
-    if (has('capture')) at(T.move, () => play('capture'))
-    else if (has('move')) at(T.move, () => play('move'))
-    if (has('castle')) at(T.castleRookDelay + T.move, () => play('move'))
+    const moved = events.find((e) => e.type === 'move')
+    const piece = moved?.type === 'move' ? moved.move.piece : undefined
+    const capture = events.find((e) => e.type === 'capture')
+    if (capture?.type === 'capture') at(T.move, () => play('capture', { piece: capture.captured }))
+    else if (moved) at(T.move, () => play('move', { piece }))
+    if (has('castle')) at(T.castleRookDelay + T.move, () => play('move', { piece: 'r' }))
     if (has('promotion')) at(T.move + 0.1, () => play('promotion'))
 
     if (has('checkmate')) {

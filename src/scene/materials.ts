@@ -1,6 +1,6 @@
 // 클래식 우드 재질 정의.
-// 나뭇결 텍스처는 캔버스로 직접 그린다(외부 파일·라이선스 불필요).
-// public/textures/ 에 CC0 PBR 텍스처를 넣으면 이 절차적 텍스처를 대체할 수 있다.
+// 나뭇결은 woodTextures.ts가 GPU로 생성한 색·노멀·거칠기 맵을 쓰고,
+// 실패하면 이 파일의 캔버스 나뭇결로 대체한다 (외부 파일·라이선스 불필요).
 import {
   CanvasTexture,
   Color,
@@ -9,7 +9,10 @@ import {
   RepeatWrapping,
   SRGBColorSpace,
 } from 'three'
+import { Vector2 } from 'three'
 import type { Texture } from 'three'
+import { woodMaps } from './woodTextures'
+import type { WoodKind } from './woodTextures'
 
 interface WoodSpec {
   base: string
@@ -95,79 +98,105 @@ export const WOOD = {
   boxwood: { base: '#efdcb4', grain: '#c9a978', lines: 40, waviness: 8, seed: 41 },
   ebony: { base: '#1d1611', grain: '#060403', lines: 50, waviness: 6, seed: 53 },
   table: { base: '#2b1a10', grain: '#120904', lines: 120, waviness: 30, seed: 67 },
-} satisfies Record<string, WoodSpec>
+} satisfies Record<WoodKind, WoodSpec>
 
-export type WoodName = keyof typeof WOOD
 
-function material<T extends MeshStandardMaterial>(make: () => T): () => T {
+function material<T>(make: () => T): () => T {
   let m: T | null = null
   return () => (m ??= make())
 }
 
-/** 칸 하나마다 결의 위치·방향이 조금씩 다르게 보이도록 텍스처를 복제한다 */
-export function tileTexture(light: boolean, index: number): Texture {
-  const src = woodTexture(light ? 'maple' : 'walnut', light ? WOOD.maple : WOOD.walnut)
-  const t = src.clone()
-  const r = rng(index * 97 + (light ? 1 : 2))
-  t.repeat.set(0.35, 0.35)
-  t.offset.set(r(), r())
-  // 이웃 칸과 결 방향을 엇갈리게
-  t.rotation = index % 2 === 0 ? 0 : Math.PI / 2
-  t.center.set(0.5, 0.5)
-  t.needsUpdate = true
-  return t
+type Surface = { map: Texture; normalMap?: Texture; roughnessMap?: Texture }
+
+/**
+ * 나무 표면: GPU로 생성한 색·노멀·거칠기 맵 (woodTextures.ts).
+ * 생성에 실패했으면 캔버스 나뭇결 하나로 대체한다.
+ * GPU 텍스처는 렌더 타깃이라 복제하지 않고, 수종마다 하나의 재질에서만 쓴다.
+ */
+function surface(kind: WoodKind, repeat = 1): Surface {
+  const gpu = woodMaps()?.[kind]
+  const s: Surface = gpu
+    ? { ...gpu }
+    : { map: woodTexture(kind, WOOD[kind]) }
+  for (const t of Object.values(s)) {
+    t.wrapS = t.wrapT = RepeatWrapping
+    t.repeat.set(repeat, repeat)
+  }
+  return s
 }
 
-export function tileMaterial(light: boolean, index: number) {
-  return new MeshPhysicalMaterial({
-    map: tileTexture(light, index),
-    roughness: light ? 0.5 : 0.45,
-    clearcoat: 0.35,
-    clearcoatRoughness: 0.4,
-  })
+/** 텍스처가 있으면 roughness는 배율(1), 없으면 수종 기본값 */
+function rough(s: Surface, fallback: number) {
+  return s.roughnessMap ? 1 : fallback
 }
+
+const NORMAL = (k: number) => new Vector2(k, k)
+
+/**
+ * 칸 재질 (밝은 칸·어두운 칸 각 하나).
+ * 칸마다 결이 다르게 보이도록 텍스처를 복제하지 않고 칸 지오메트리의 UV 창을 다르게 준다 (Board3D).
+ */
+export const tileMaterials = material(() => {
+  const light = surface('maple')
+  const dark = surface('walnut')
+  return {
+    light: new MeshPhysicalMaterial({
+      ...light,
+      normalScale: NORMAL(0.55),
+      roughness: rough(light, 0.5),
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.22,
+    }),
+    dark: new MeshPhysicalMaterial({
+      ...dark,
+      normalScale: NORMAL(0.7),
+      roughness: rough(dark, 0.45),
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.22,
+    }),
+  }
+})
 
 export const materials = {
   ebonyInlay: material(
     () => new MeshStandardMaterial({ color: '#0b0806', roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -1 }),
   ),
   mahogany: material(() => {
-    const map = woodTexture('mahogany', WOOD.mahogany).clone()
-    map.repeat.set(2, 2)
-    map.needsUpdate = true
-    return new MeshPhysicalMaterial({ map, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.25 })
+    const s = surface('mahogany', 2)
+    // 반광택 바니시: 클리어코트 아래로 리본 무늬가 비친다
+    return new MeshPhysicalMaterial({ ...s, normalScale: NORMAL(0.6), roughness: rough(s, 0.38), clearcoat: 0.8, clearcoatRoughness: 0.18 })
   }),
   brass: material(() => new MeshStandardMaterial({ color: '#d4a93a', metalness: 1, roughness: 0.32 })),
   table: material(() => {
-    const map = woodTexture('table', WOOD.table).clone()
-    map.repeat.set(6, 6)
-    map.needsUpdate = true
-    return new MeshStandardMaterial({ map, roughness: 0.7 })
+    const s = surface('table', 6)
+    return new MeshPhysicalMaterial({ ...s, normalScale: NORMAL(0.8), roughness: rough(s, 0.7), clearcoat: 0.15, clearcoatRoughness: 0.5 })
   }),
   // 승리한 쪽이 빛날 때는 재질을 바꾸지 않고 emissiveIntensity만 올린다
   // (재질 교체는 셰이더 재컴파일로 순간 끊김을 만든다)
-  boxwood: material(
-    () =>
-      new MeshPhysicalMaterial({
-        map: woodTexture('boxwood', WOOD.boxwood),
-        roughness: 0.42,
-        clearcoat: 0.45,
-        clearcoatRoughness: 0.35,
-        emissive: new Color('#ffbf3c'),
-        emissiveIntensity: 0,
-      }),
-  ),
-  ebony: material(
-    () =>
-      new MeshPhysicalMaterial({
-        map: woodTexture('ebony', WOOD.ebony),
-        roughness: 0.28,
-        clearcoat: 0.9,
-        clearcoatRoughness: 0.15,
-        emissive: new Color('#ffb02e'),
-        emissiveIntensity: 0,
-      }),
-  ),
+  boxwood: material(() => {
+    const s = surface('boxwood')
+    return new MeshPhysicalMaterial({
+      ...s,
+      normalScale: NORMAL(0.35),
+      roughness: rough(s, 0.42),
+      clearcoat: 0.45,
+      clearcoatRoughness: 0.3,
+      emissive: new Color('#ffbf3c'),
+      emissiveIntensity: 0,
+    })
+  }),
+  ebony: material(() => {
+    const s = surface('ebony')
+    return new MeshPhysicalMaterial({
+      ...s,
+      normalScale: NORMAL(0.4),
+      roughness: rough(s, 0.28),
+      clearcoat: 0.9,
+      clearcoatRoughness: 0.12,
+      emissive: new Color('#ffb02e'),
+      emissiveIntensity: 0,
+    })
+  }),
   /** 잡기 파편용 (흰·검은 나무) */
   shardLight: material(() => new MeshStandardMaterial({ color: '#e6cf9f', roughness: 0.6 })),
   shardDark: material(() => new MeshStandardMaterial({ color: '#2a1d14', roughness: 0.5 })),

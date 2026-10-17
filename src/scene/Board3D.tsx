@@ -4,7 +4,8 @@ import { RoundedBox } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import type { Square } from 'chess.js'
 import { ALL_SQUARES, BOARD_HALF, BOARD_TOP, FRAME_WIDTH, isLightSquare, squareToWorld, worldToSquare } from './coords'
-import { materials, tileMaterial } from './materials'
+import { BoxGeometry } from 'three'
+import { materials, tileMaterials } from './materials'
 
 const TILE = 0.975
 const TILE_H = 0.06
@@ -13,30 +14,59 @@ const INLAY_Y = BOARD_TOP - 0.022
 const FRAME_H = 0.42
 const FRAME_SIZE = (BOARD_HALF + FRAME_WIDTH) * 2
 
+// 재현 가능한 의사 난수
+function rng(seed: number) {
+  let s = seed >>> 0
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0
+    return s / 4294967296
+  }
+}
+
+/**
+ * 칸 하나의 지오메트리. 실제 보드처럼 칸마다 다른 나무 조각을 쓴 것처럼 보이도록
+ * 나무 텍스처의 서로 다른 부분(UV 창)을 쓰고, 이웃 칸과 결 방향을 90° 엇갈린다.
+ */
+function tileGeometry(index: number): BoxGeometry {
+  const g = new BoxGeometry(TILE, TILE_H, TILE)
+  const r = rng(index * 97 + 13)
+  const win = 0.3
+  const ox = r() * (1 - win)
+  const oy = r() * (1 - win)
+  const turn = r() > 0.5
+  const uv = g.getAttribute('uv')
+  for (let i = 0; i < uv.count; i++) {
+    let u = uv.getX(i)
+    let v = uv.getY(i)
+    if (turn) [u, v] = [v, 1 - u]
+    uv.setXY(i, ox + u * win, oy + v * win)
+  }
+  uv.needsUpdate = true
+  return g
+}
+
 interface Props {
   onHover: (sq: Square | null) => void
   onClick: (sq: Square) => void
 }
 
 export const Board3D = memo(function Board3D({ onHover, onClick }: Props) {
-  const tiles = useMemo(
-    () =>
-      ALL_SQUARES.map((sq, i) => ({
-        sq,
-        pos: squareToWorld(sq, BOARD_TOP - TILE_H / 2),
-        mat: tileMaterial(isLightSquare(sq), i),
-      })),
-    [],
-  )
+  const tiles = useMemo(() => {
+    const mats = tileMaterials()
+    return ALL_SQUARES.map((sq, i) => ({
+      sq,
+      pos: squareToWorld(sq, BOARD_TOP - TILE_H / 2),
+      mat: isLightSquare(sq) ? mats.light : mats.dark,
+      geo: tileGeometry(i),
+    }))
+  }, [])
 
   const pick = (e: ThreeEvent<PointerEvent | MouseEvent>) => worldToSquare(e.point)
 
   return (
     <group>
-      {tiles.map(({ sq, pos, mat }) => (
-        <mesh key={sq} position={pos} material={mat} receiveShadow>
-          <boxGeometry args={[TILE, TILE_H, TILE]} />
-        </mesh>
+      {tiles.map(({ sq, pos, mat, geo }) => (
+        <mesh key={sq} position={pos} material={mat} geometry={geo} receiveShadow />
       ))}
 
       {/* 흑단 상감 바닥: 칸 사이 틈으로 보인다 */}

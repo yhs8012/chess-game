@@ -221,7 +221,7 @@ export function useChessGame() {
         }
         if (piece && piece.color === side) {
           setSelected(square)
-          gameBus.emit({ type: 'select', square })
+          gameBus.emit({ type: 'select', square, piece: piece?.type })
           return
         }
         doMove({ from: selected, to: square })
@@ -229,7 +229,7 @@ export function useChessGame() {
       }
       if (piece && piece.color === side) {
         setSelected(square)
-        gameBus.emit({ type: 'select', square })
+        gameBus.emit({ type: 'select', square, piece: piece?.type })
       }
     },
     [canInput, selected, doMove],
