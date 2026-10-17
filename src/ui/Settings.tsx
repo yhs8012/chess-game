@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChessGame } from '../hooks/useChessGame'
 import { updateSettings, useSettings } from '../hooks/settings'
 import type { Settings as SettingsT } from '../hooks/settings'
+import { ModelCredit } from './help/HelpPanel'
 
 function Toggle({ label, hint, k }: { label: string; hint?: string; k: keyof SettingsT }) {
   const s = useSettings()
@@ -126,6 +127,7 @@ export function Settings({ g }: { g: ChessGame }) {
             {s.mode === 'pvp' && <Toggle k="autoRotate" label="턴마다 시점 전환" hint="같은 화면 대전용" />}
             <Toggle k="checkVoice" label={'"Check!" 음성'} hint="체크메이트 음성은 항상 재생" />
           </div>
+          <ModelCredit />
         </div>
       )}
     </div>

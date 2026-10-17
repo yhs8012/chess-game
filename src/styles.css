@@ -799,6 +799,17 @@ h3 {
   margin: 0 2px;
 }
 
+.credit {
+  border-top: 1px solid rgba(201, 178, 138, 0.6);
+  padding-top: 10px;
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+
+.credit a {
+  color: var(--brass-dark);
+}
+
 .shortcuts {
   margin-top: 4px;
 }

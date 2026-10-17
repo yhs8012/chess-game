@@ -4,7 +4,23 @@ import type { PieceSymbol } from 'chess.js'
 import type { ChessGame } from '../../hooks/useChessGame'
 import { helpContext } from './helpContext'
 import { PieceCard } from './PieceCard'
-import { CHECK_ALERT, HOW_TO, OUTCOMES, PIECE_ORDER, PIECES, SPECIAL } from './rulesText.ko'
+import { CHECK_ALERT, HOW_TO, MODEL_CREDIT, OUTCOMES, PIECE_ORDER, PIECES, SPECIAL } from './rulesText.ko'
+
+export function ModelCredit() {
+  return (
+    <p className="muted small credit">
+      기물 모델:{' '}
+      <a href={MODEL_CREDIT.source} target="_blank" rel="noreferrer">
+        {MODEL_CREDIT.title}
+      </a>{' '}
+      — {MODEL_CREDIT.authors},{' '}
+      <a href={MODEL_CREDIT.licenseUrl} target="_blank" rel="noreferrer">
+        {MODEL_CREDIT.license}
+      </a>
+      . {MODEL_CREDIT.note}
+    </p>
+  )
+}
 
 export function HelpPanel({ g }: { g: ChessGame }) {
   const { helpOpen, game, selected, config, turn } = g
@@ -114,6 +130,8 @@ export function HelpPanel({ g }: { g: ChessGame }) {
             </p>
           ))}
         </details>
+
+        <ModelCredit />
 
         <p className="muted small shortcuts">
           단축키: <kbd>H</kbd> 또는 <kbd>?</kbd> 열기·닫기 · <kbd>Esc</kbd> 닫기

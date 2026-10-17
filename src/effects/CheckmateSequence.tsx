@@ -71,7 +71,7 @@ function EndText({ text, position, color, widthRatio }: { text: string; position
 export function CheckmateText({ kingSquare }: { kingSquare: Square }) {
   const k = squareToWorld(kingSquare, BOARD_TOP)
   // 줌인한 카메라 시야 안, 쓰러진 킹 위쪽
-  const pos: [number, number, number] = [k.x, BOARD_TOP + 1.55, k.z]
+  const pos: [number, number, number] = [k.x, BOARD_TOP + 1.9, k.z]
   const color = useMemo(() => new Color(1.5, 0.85, 0.15), [])
   return (
     <Suspense fallback={null}>

@@ -338,12 +338,14 @@ npm run build
 - [x] 기물 모델: **GLTF** (스턴턴 양식, CC0 우선)
 - [x] 디자인 콘셉트: **클래식 우드**
 - [x] "Checkmate!" 음성: **브라우저 TTS**
-- [x] 기물: GLB가 확정될 때까지 **Lathe 임시 기물**로 진행 (`public/models/chess-set.glb`만 넣으면 교체됨)
+- [x] 기물 모델: **KhronosGroup/glTF-Sample-Assets → Models/ABeautifulGame** (CC BY 4.0 — 출처 표기 필수, `CREDITS.md`·게임 안 Help/설정에 표시)
+  - `scripts/build-chess-model.mjs`로 백 기물 6종만 추출, 기물당 ≤5k 삼각형, Draco 압축 → `public/models/chess-set.glb` (약 124KB)
+  - 모델 고유 비율이 가늘고 길어서, 킹 높이 대신 **킹 받침 폭 = 칸의 66%**(높이 상한 1.9)로 스케일을 맞춘다
+  - 로딩 실패 시 Lathe 임시 기물로 대체
 - [x] 온라인 대전: **이번 범위에서 제외** (엔진이 분리돼 있어 나중에 확장 가능)
 
 ## 11. 남은 확인 사항
 
-- [ ] 사용할 GLTF 체스 세트 확정 (라이선스 확인 후 `CREDITS.md` 기록)
 - [ ] CC0 효과음 파일로 교체할지 (지금은 합성음)
 - [ ] CC0 PBR 나무 텍스처로 교체할지 (지금은 절차적 텍스처)
 
@@ -357,3 +359,4 @@ npm run build
 - **승리 발광**: 재질을 바꿔 끼우면 셰이더 재컴파일로 화면이 순간 멈추므로, 회양목·흑단 재질의 `emissiveIntensity`만 올린다.
 - **3D 글자 폰트**: three.js 동봉 Droid Serif Bold (Apache 2.0).
 - **성능**: drei `PerformanceMonitor`로 프레임이 떨어지면 DPR을 1로 낮춘다.
+- **Draco 디코더**: CDN 대신 `public/draco/`에 두고 불러온다 (three.js 동봉, Apache 2.0).

@@ -8,9 +8,15 @@ import { BufferGeometry, Matrix4, Mesh, Vector3 } from 'three'
 import type { Object3D } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { PieceSymbol } from 'chess.js'
-import { KING_HEIGHT, latheGeometries } from './latheGeometry'
+import { latheGeometries } from './latheGeometry'
+
+/** 킹 받침 지름 목표 (칸 너비 1 기준) */
+const KING_BASE_WIDTH = 0.66
+const KING_MAX_HEIGHT = 1.9
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}models/chess-set.glb`
+/** Draco 디코더를 CDN이 아니라 public/draco/ 에서 불러온다 */
+const DRACO_URL = `${import.meta.env.BASE_URL}draco/`
 
 type Geometries = Record<PieceSymbol, BufferGeometry>
 
@@ -75,10 +81,13 @@ export function extractPieces(scene: Object3D): Geometries | null {
   const types = Object.keys(NAMES) as PieceSymbol[]
   if (!types.every((t) => found[t])) return null
 
-  // 킹의 y 높이를 KING_HEIGHT에 맞추는 배율을 모든 기물에 똑같이 적용한다
+  // 킹 받침 폭이 칸의 약 66%가 되는 배율을 모든 기물에 똑같이 적용한다 (모델 고유 비율 유지)
+  // 다만 킹이 너무 커지지 않게 높이는 KING_MAX_HEIGHT로 제한한다
   found.k!.computeBoundingBox()
   const kingBox = found.k!.boundingBox!
-  const scale = KING_HEIGHT / (kingBox.max.y - kingBox.min.y)
+  const kingWidth = Math.max(kingBox.max.x - kingBox.min.x, kingBox.max.z - kingBox.min.z)
+  const kingHeight = kingBox.max.y - kingBox.min.y
+  const scale = Math.min(KING_BASE_WIDTH / kingWidth, KING_MAX_HEIGHT / kingHeight)
   for (const t of types) {
     const g = found[t]!
     g.computeBoundingBox()
@@ -93,7 +102,7 @@ export function extractPieces(scene: Object3D): Geometries | null {
 }
 
 function GltfGeometries({ url, children }: { url: string; children: ReactNode }) {
-  const { scene } = useGLTF(url)
+  const { scene } = useGLTF(url, DRACO_URL)
   const geos = useMemo(() => extractPieces(scene), [scene])
   if (!geos) console.warn('[chess3d] GLB에서 6종 기물 노드를 찾지 못해 임시 기물을 씁니다.')
   return <GeometryContext.Provider value={geos}>{children}</GeometryContext.Provider>

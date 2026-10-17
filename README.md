@@ -33,7 +33,7 @@ npm run preview  # 빌드 결과 미리보기
 
 ## 에셋 바꾸기
 
-- **기물 모델**: `public/models/chess-set.glb` — 자세한 조건은 [public/models/README.md](public/models/README.md)
+- **기물 모델**: 지금은 Khronos 샘플 "A Beautiful Game"(CC BY 4.0)을 변환해 씁니다. 원본 GLB를 받아 `node scripts/build-chess-model.mjs ABeautifulGame.glb`로 다시 만들 수 있고, 다른 모델로 바꾸려면 [public/models/README.md](public/models/README.md) 참고
 - **효과음**: `public/sounds/` + `sounds.json` — [public/sounds/README.md](public/sounds/README.md)
 - 추가한 자원의 출처·라이선스는 [CREDITS.md](CREDITS.md)에 기록
 

@@ -6,10 +6,11 @@
 
 | 자원 | 출처 | 라이선스 |
 |---|---|---|
-| 기물 (Lathe 회전체 + 나이트 머리 압출) | 이 프로젝트에서 코드로 직접 생성 (`src/scene/pieces/latheGeometry.ts`) | 프로젝트와 동일 |
+| **기물 `public/models/chess-set.glb`** — "A Beautiful Game" | 원본 모델: MaterialX Project / © 2020 ASWF · glTF 변환: © 2022 Ed Mackey · [KhronosGroup/glTF-Sample-Assets › Models/ABeautifulGame](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/ABeautifulGame) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| 임시 기물 (GLB를 못 불러올 때) | 코드로 직접 생성 (`src/scene/pieces/latheGeometry.ts`) | 프로젝트와 동일 |
 
-> `public/models/chess-set.glb`를 추가하면 Lathe 기물 대신 그 모델을 씁니다.
-> 모델명·작가·링크·라이선스를 이 표에 추가하세요. CC0 우선, CC-BY면 출처 표기 필수.
+> **변경 사항 (CC BY 4.0 요구)**: 백 기물 6종만 남기고 보드·재질·텍스처를 제거, 기물당 약 4,500 삼각형으로 단순화, 나이트 방향 회전, Draco 압축.
+> 변환 스크립트: `scripts/build-chess-model.mjs`. 게임 안 Help 패널·설정 메뉴에도 출처를 표시합니다.
 
 ## 텍스처
 
@@ -38,6 +39,7 @@
 
 | 라이브러리 | 라이선스 |
 |---|---|
+| Draco 디코더 (`public/draco/`, three.js 동봉) | Apache License 2.0 |
 | chess.js | BSD-2-Clause |
 | three.js, @react-three/fiber, @react-three/drei, @react-three/postprocessing, postprocessing | MIT |
 | React | MIT |

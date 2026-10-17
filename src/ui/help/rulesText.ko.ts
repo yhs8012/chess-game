@@ -59,6 +59,16 @@ export const HOW_TO = {
   promotion: '폰을 끝 줄로 옮기면 바꿀 기물을 고르는 창이 열려요.',
 } as const
 
+/** CC-BY 4.0 저작자 표시 (기물 모델) */
+export const MODEL_CREDIT = {
+  title: 'A Beautiful Game',
+  authors: 'MaterialX Project / ASWF (원본 모델), Ed Mackey (glTF 변환)',
+  source: 'https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/ABeautifulGame',
+  license: 'CC BY 4.0',
+  licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+  note: '게임용으로 기물만 남기고 폴리곤을 줄였으며, 재질을 나무로 바꿨어요.',
+} as const
+
 export const DRAW_REASON_TEXT = {
   stalemate: '스테일메이트',
   threefold: '같은 배치 3회 반복',
