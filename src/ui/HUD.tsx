@@ -75,18 +75,18 @@ export function Toolbar({ g }: { g: ChessGame }) {
     <nav className="toolbar panel" aria-label="시점과 대국">
       <div className="toolbar__group">
         <button className="btn" onClick={() => g.setCameraPreset('white')} title="백 시점">
-          ♔ 백 시점
+          <span className="btn__icon">♔</span> 백 시점
         </button>
         <button className="btn" onClick={() => g.setCameraPreset('black')} title="흑 시점">
-          ♚ 흑 시점
+          <span className="btn__icon">♚</span> 흑 시점
         </button>
         <button className="btn" onClick={() => g.setCameraPreset('top')} title="위에서 내려다보기">
-          ⊞ 위에서
+          <span className="btn__icon">⊞</span> 위에서
         </button>
       </div>
       <div className="toolbar__group">
         <button className="btn" onClick={g.undo} disabled={g.game.moves.length === 0}>
-          ↶ 무르기
+          <span className="btn__icon">↶</span> 무르기
         </button>
         <button className="btn btn--primary" onClick={g.newGame}>
           새 게임

@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { Spherical, Vector3 } from 'three'
+import { MathUtils, PerspectiveCamera, Spherical, Vector3 } from 'three'
 import type { CameraPreset, CameraRequest } from '../hooks/useChessGame'
 import { BOARD_TOP, squareToWorld } from './coords'
 import { easeInOut } from '../effects/MoveAnimation'
@@ -12,16 +12,27 @@ import { easeInOut } from '../effects/MoveAnimation'
 const MAX_POLAR = Math.PI / 2 - 0.23
 const TRANSITION = 1.0
 
+/** 세로 화면에서는 시야각을 넓혀 너무 멀어지지 않게 한다 */
+export function fovFor(aspect: number): number {
+  return aspect < 0.8 ? 55 : 40
+}
+
+/** 프레임(폭 약 9.8)과 좌표 라벨이 가로로 다 들어오는 거리 */
+function fitRadius(aspect: number, halfWidth: number): number {
+  const vHalf = MathUtils.degToRad(fovFor(aspect) / 2)
+  const hHalf = Math.atan(Math.tan(vHalf) * aspect)
+  return halfWidth / Math.tan(hHalf)
+}
+
 export function presetSpherical(preset: CameraPreset, aspect: number): Spherical {
-  // 세로 화면에서는 보드가 잘리지 않게 더 멀리
-  const r = aspect < 0.8 ? 20 : aspect < 1.2 ? 16 : 13.6
+  const r = Math.max(13.6, fitRadius(aspect, 5.3) + 2)
   switch (preset) {
     case 'white':
       return new Spherical(r, 0.72, 0)
     case 'black':
       return new Spherical(r, 0.72, Math.PI)
     case 'top':
-      return new Spherical(r * 1.12, 0.0001, 0)
+      return new Spherical(Math.max(15.2, fitRadius(aspect, 5.5)), 0.0001, 0)
   }
 }
 
@@ -58,6 +69,12 @@ export function CameraRig({ request, locked }: { request: CameraRequest; locked:
     const c = controls.current
     if (!c) return
     const now = clock.elapsedTime
+    const cam = camera as PerspectiveCamera
+    const fov = fovFor(size.width / size.height)
+    if (cam.fov !== fov) {
+      cam.fov = fov
+      cam.updateProjectionMatrix()
+    }
     const req = pending.current
     if (req) {
       pending.current = null
@@ -108,7 +125,7 @@ export function CameraRig({ request, locked }: { request: CameraRequest; locked:
       minPolarAngle={0}
       maxPolarAngle={MAX_POLAR}
       minDistance={4}
-      maxDistance={26}
+      maxDistance={40}
       enablePan={false}
       enabled={!locked}
     />

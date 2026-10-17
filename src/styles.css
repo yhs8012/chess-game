@@ -1181,6 +1181,45 @@ button.piece-card:hover {
     --gutter: 10px;
   }
 
+  /* 하단 툴바: 다섯 버튼이 폭을 나눠 쓴다. Help 버튼은 그 위로 */
+  .toolbar {
+    left: var(--gutter);
+    right: var(--gutter);
+    max-width: none;
+    overflow: visible;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .toolbar__group {
+    flex: 3;
+    gap: 3px;
+  }
+
+  .toolbar__group + .toolbar__group {
+    flex: 2;
+    padding-left: 4px;
+  }
+
+  .toolbar .btn {
+    flex: 1;
+    padding: 4px 2px;
+    font-size: 0.76rem;
+    min-width: 0;
+  }
+
+  .btn__icon {
+    display: none;
+  }
+
+  .help-button-wrap {
+    bottom: calc(var(--gutter) + 58px);
+  }
+
+  .hover-coord {
+    bottom: calc(var(--gutter) + 60px);
+  }
+
   .hud__left {
     width: min(220px, calc(100vw - 150px));
     gap: 8px;
