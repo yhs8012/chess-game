@@ -1,5 +1,4 @@
 # Staunton 3D Chess
-\n> 브라우저에서 플레이하는 3D 체스 게임 (React + three.js + chess.js) · [MIT License](LICENSE)
 
 브라우저에서 플레이하는 클래식 우드 3D 체스. 규칙 판정은 [chess.js](https://github.com/jhlywa/chess.js)가 맡고, 3D는 three.js + React Three Fiber로 그립니다.
 
@@ -52,3 +51,8 @@ npm run preview  # 빌드 결과 미리보기
 `main` 브랜치에 push하면 `.github/workflows/deploy.yml`이 GitHub Pages로 배포합니다.
 저장소 Settings → Pages → Source를 **GitHub Actions**로 한 번 설정해 주세요.
 빌드는 상대 경로(`base: './'`)라 어느 하위 경로에 올려도 동작합니다.
+
+## 라이선스
+
+- 코드: [MIT](LICENSE)
+- 기물 모델 "A Beautiful Game": CC BY 4.0 (MaterialX Project / ASWF, Ed Mackey) — 자세한 출처는 [CREDITS.md](CREDITS.md)
