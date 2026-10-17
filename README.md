@@ -1,4 +1,5 @@
 # Staunton 3D Chess
+\n> 브라우저에서 플레이하는 3D 체스 게임 (React + three.js + chess.js) · [MIT License](LICENSE)
 
 브라우저에서 플레이하는 클래식 우드 3D 체스. 규칙 판정은 [chess.js](https://github.com/jhlywa/chess.js)가 맡고, 3D는 three.js + React Three Fiber로 그립니다.
 
