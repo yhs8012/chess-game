@@ -211,22 +211,22 @@
 > | 이벤트 판별 | 반환된 move의 `flags`: `c` 잡기, `e` 앙파상, `k`·`q` 캐슬링, `p` 프로모션 |
 
 ### 필수 (MVP)
-- [ ] 표준 초기 배치, 기물별 기본 이동
-- [ ] 턴 교대, 체크 감지, 자살수 금지
-- [ ] 체크메이트 / 스테일메이트 판정
+- [x] 표준 초기 배치, 기물별 기본 이동
+- [x] 턴 교대, 체크 감지, 자살수 금지
+- [x] 체크메이트 / 스테일메이트 판정
 
 ### 특수 규칙
-- [ ] 캐슬링, 앙파상, 폰 프로모션(선택 UI)
-- [ ] 무승부: 50수 규칙, 3회 동형반복, 기물 부족
+- [x] 캐슬링, 앙파상, 폰 프로모션(선택 UI)
+- [x] 무승부: 50수 규칙, 3회 동형반복, 기물 부족
 
 ### 편의 기능
-- [ ] 기보 패널(SAN), 무르기, 새 게임
-- [ ] 잡은 말 트레이 표시
-- [ ] (선택) 대국 시계
+- [x] 기보 패널(SAN), 무르기, 새 게임
+- [x] 잡은 말 트레이 표시
+- [x] (선택) 대국 시계
 
 ### AI
-- [ ] 난이도: 쉬움(랜덤) / 보통(깊이 2) / 어려움(깊이 3~4)
-- [ ] AI 계산은 Web Worker에서 (3D 렌더링 끊김 방지)
+- [x] 난이도: 쉬움(랜덤) / 보통(깊이 2) / 어려움(깊이 3~4)
+- [x] AI 계산은 Web Worker에서 (3D 렌더링 끊김 방지)
 
 ---
 
@@ -236,8 +236,10 @@
 src/
 ├── engine/                # React·Three 의존 없음
 │   ├── game.ts            # chess.js 래퍼 (수 두기 → 이벤트 생성)
-│   ├── events.ts          # move/capture/check/checkmate 이벤트 정의
-│   └── ai.ts              # chess.js 합법수 기반 미니맥스
+│   ├── events.ts          # move/capture/check/checkmate 이벤트 정의 + 이벤트 버스
+│   ├── tracking.ts        # 기물 고유 id 추적 (애니메이션용, 캐슬링·앙파상·프로모션 반영)
+│   ├── ai.ts              # chess.js 합법수 기반 미니맥스
+│   └── ai.worker.ts       # AI Web Worker
 ├── scene/                 # 3D
 │   ├── ChessScene.tsx     # Canvas, 조명, 카메라, 후처리
 │   ├── Board3D.tsx        # 칸 + 그리드 라인
@@ -248,8 +250,13 @@ src/
 │   ├── Highlights.tsx     # 선택·이동가능·마지막 수 표시
 │   ├── PatternPreview.tsx # Help용 이동 패턴(파란 타일) + 막힌 이유 툴팁
 │   ├── CameraRig.tsx      # 시점 프리셋, 체크메이트 줌
+│   ├── DebugBridge.tsx    # ?debug 주소에서만 자동 테스트용 좌표·상태 노출
 │   └── coords.ts          # squareToWorld / worldToSquare
 ├── effects/
+│   ├── timing.ts          # 연출·사운드 공용 시간표, 입력 잠금 시간
+│   ├── Particles.tsx      # InstancedMesh 파티클 풀 (파편·먼지·컨페티)
+│   ├── PromotionPillar.tsx
+│   ├── shake.ts           # 미세한 화면 흔들림
 │   ├── MoveAnimation.ts
 │   ├── CaptureShatter.tsx
 │   ├── CheckGlow.tsx
@@ -272,7 +279,11 @@ src/
 │       ├── helpContext.ts      # 현재 상황 → 보여줄 도움말 결정
 │       ├── blockReason.ts      # "왜 못 가는지" 이유 판별
 │       └── rulesText.ko.ts     # 4-A-5 문구
-├── hooks/useChessGame.ts
+├── hooks/
+│   ├── useChessGame.ts    # 게임 흐름 (선택·이동·AI·종료 연출·시계)
+│   ├── useGameEvents.ts   # 이벤트 구독 훅
+│   ├── settings.ts        # 설정 (localStorage)
+│   └── store.ts           # 작은 외부 스토어
 ├── App.tsx
 └── main.tsx
 public/sounds/             # move.mp3, capture.mp3, check.mp3, checkmate.mp3, victory.mp3 ...
@@ -327,8 +338,22 @@ npm run build
 - [x] 기물 모델: **GLTF** (스턴턴 양식, CC0 우선)
 - [x] 디자인 콘셉트: **클래식 우드**
 - [x] "Checkmate!" 음성: **브라우저 TTS**
+- [x] 기물: GLB가 확정될 때까지 **Lathe 임시 기물**로 진행 (`public/models/chess-set.glb`만 넣으면 교체됨)
+- [x] 온라인 대전: **이번 범위에서 제외** (엔진이 분리돼 있어 나중에 확장 가능)
 
 ## 11. 남은 확인 사항
 
 - [ ] 사용할 GLTF 체스 세트 확정 (라이선스 확인 후 `CREDITS.md` 기록)
-- [ ] 온라인 대전(멀티플레이어)까지 확장할지
+- [ ] CC0 효과음 파일로 교체할지 (지금은 합성음)
+- [ ] CC0 PBR 나무 텍스처로 교체할지 (지금은 절차적 텍스처)
+
+## 12. 구현 메모 (명세와 다르게 한 부분과 이유)
+
+- **애니메이션**: react-spring 대신 `useFrame` 안에서 직접 보간한다. 포물선·지연·잡힘→트레이 같은 단계형 연출을 한 곳에서 제어하기 쉽다. 시간표는 `effects/timing.ts` 하나에 모아 사운드와 맞춘다.
+- **환경광**: drei `Environment`의 HDR 프리셋은 외부 CDN에서 파일을 받으므로, 같은 `Environment`에 `Lightformer`로 실내 조명을 직접 구성했다 (네트워크 없이 동작).
+- **나무 텍스처**: CC0 PBR 파일 대신 캔버스로 나뭇결을 생성한다 (`scene/materials.ts`). 파일이 정해지면 교체.
+- **chess.js 이벤트 판별**: v1.4에서 `flags`가 deprecated라 `isCapture()`·`isEnPassant()`·`isKingsideCastle()` 등 descriptor 함수를 쓴다. 단 **`isCapture()`는 앙파상을 포함하지 않으므로** `engine/game.ts`의 `isCaptureMove()`로 합쳐 쓴다 (테스트로 확인).
+- **막힌 이유 툴팁**: 명세의 4가지 문구 외에, 폰이 대각선으로 갈 수 없는 경우("잡을 상대 말이 있을 때만")와 앞이 막힌 경우를 위한 폰 전용 문구를 추가했다. 그렇지 않으면 "킹이 체크당해요"로 잘못 안내된다.
+- **승리 발광**: 재질을 바꿔 끼우면 셰이더 재컴파일로 화면이 순간 멈추므로, 회양목·흑단 재질의 `emissiveIntensity`만 올린다.
+- **3D 글자 폰트**: three.js 동봉 Droid Serif Bold (Apache 2.0).
+- **성능**: drei `PerformanceMonitor`로 프레임이 떨어지면 DPR을 1로 낮춘다.
