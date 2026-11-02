@@ -4,7 +4,7 @@ import { useChessGame, gameBus } from './hooks/useChessGame'
 import { useGameEvents } from './hooks/useGameEvents'
 import { useSettings } from './hooks/settings'
 import { bindSounds, cancelScheduledSounds, initAudio } from './audio/soundManager'
-import { HoverCoordinate, Toolbar, TurnPanel } from './ui/HUD'
+import { HoverCoordinate, Toolbar, TurnChip, TurnPanel } from './ui/HUD'
 import { MoveHistory } from './ui/MoveHistory'
 import { PromotionDialog } from './ui/PromotionDialog'
 import { ResultPanel } from './ui/ResultPanel'
@@ -43,6 +43,17 @@ export default function App() {
   const [firstRun] = useState(() => !loadFlag('chess3d.started'))
   const [newGameOpen, setNewGameOpen] = useState(firstRun)
   const openNewGame = () => setNewGameOpen(true)
+  // 왼쪽 위 창(대국 정보·기보) 접기/펼치기, 상태는 기억해 둔다
+  const [infoCollapsed, setInfoCollapsed] = useState(() => loadFlag('chess3d.infoCollapsed'))
+  const setCollapsed = (v: boolean) => {
+    setInfoCollapsed(v)
+    try {
+      if (v) saveFlag('chess3d.infoCollapsed')
+      else localStorage.removeItem('chess3d.infoCollapsed')
+    } catch {
+      /* 저장 실패는 무시 */
+    }
+  }
 
   useEffect(() => {
     initAudio()
@@ -67,8 +78,14 @@ export default function App() {
 
       <div className="hud">
         <div className="hud__left">
-          <TurnPanel g={g} onNewGame={openNewGame} />
-          <MoveHistory g={g} />
+          {infoCollapsed ? (
+            <TurnChip g={g} onOpen={() => setCollapsed(false)} />
+          ) : (
+            <>
+              <TurnPanel g={g} onNewGame={openNewGame} onCollapse={() => setCollapsed(true)} />
+              <MoveHistory g={g} />
+            </>
+          )}
         </div>
         <Settings g={g} />
         <HoverCoordinate />

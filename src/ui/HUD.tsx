@@ -33,23 +33,52 @@ function Clocks({ g }: { g: ChessGame }) {
   )
 }
 
-export function TurnPanel({ g, onNewGame }: { g: ChessGame; onNewGame: () => void }) {
+/** 지금 상황 한 줄: "백(나) 차례", "체크메이트 — 흑 승리" 등 */
+export function turnLine(g: ChessGame): string {
   const { turn, status, aiThinking, end, config } = g
-  const { difficulty } = useSettings()
   const name = (c: 'w' | 'b') => {
     const base = c === 'w' ? '백' : '흑'
     if (config.mode !== 'ai') return base
     return c === config.humanColor ? `${base}(나)` : `${base}(AI)`
   }
-  let line: string
-  if (end?.kind === 'checkmate' || status.isCheckmate) line = `체크메이트 — ${name(status.winner!)} 승리`
-  else if (end?.kind === 'draw' || status.isDraw) line = '무승부'
-  else if (aiThinking) line = 'AI가 생각 중…'
-  else if (status.isCheck) line = `${name(turn)} 차례 · 체크!`
-  else line = `${name(turn)} 차례`
+  if (end?.kind === 'checkmate' || status.isCheckmate) return `체크메이트 — ${name(status.winner!)} 승리`
+  if (end?.kind === 'draw' || status.isDraw) return '무승부'
+  if (aiThinking) return 'AI가 생각 중…'
+  if (status.isCheck) return `${name(turn)} 차례 · 체크!`
+  return `${name(turn)} 차례`
+}
+
+/** 왼쪽 위 창을 접었을 때 남는 작은 칩: 차례만 보여 주고, 누르면 다시 펼친다 */
+export function TurnChip({ g, onOpen }: { g: ChessGame; onOpen: () => void }) {
+  const { turn, status, aiThinking } = g
+  return (
+    <button
+      className={`panel turn-chip ${status.isCheck && !status.isCheckmate ? 'turn--check' : ''}`}
+      onClick={onOpen}
+      aria-expanded={false}
+      aria-label="대국 정보 펼치기"
+      title="대국 정보 펼치기"
+    >
+      <span className={`dot dot--${turn}`} />
+      <span>{turnLine(g)}</span>
+      {aiThinking && <span className="spinner" aria-hidden />}
+      <span className="turn-chip__chev" aria-hidden>
+        ▸
+      </span>
+    </button>
+  )
+}
+
+export function TurnPanel({ g, onNewGame, onCollapse }: { g: ChessGame; onNewGame: () => void; onCollapse: () => void }) {
+  const { turn, status, aiThinking, config } = g
+  const { difficulty } = useSettings()
+  const line = turnLine(g)
 
   return (
     <section className="panel turn-panel">
+      <button className="icon-btn panel-collapse" onClick={onCollapse} aria-expanded aria-label="대국 정보 접기" title="접기">
+        ‹
+      </button>
       <h1 className="brand">
         Staunton <em>3D</em>
       </h1>
