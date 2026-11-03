@@ -9,6 +9,7 @@ import { MoveHistory } from './ui/MoveHistory'
 import { PromotionDialog } from './ui/PromotionDialog'
 import { ResultPanel } from './ui/ResultPanel'
 import { NewGameDialog } from './ui/NewGameDialog'
+import { MoveNotice } from './ui/MoveNotice'
 import { loadFlag, saveFlag } from './hooks/store'
 import { Settings } from './ui/Settings'
 import { HelpButton } from './ui/help/HelpButton'
@@ -93,6 +94,7 @@ export default function App() {
         <HelpButton open={g.helpOpen} setOpen={g.setHelpOpen} />
       </div>
 
+      <MoveNotice g={g} />
       <HelpPanel g={g} />
       <CheckFlash />
       {promotionColor && <PromotionDialog color={promotionColor} onChoose={g.choosePromotion} />}

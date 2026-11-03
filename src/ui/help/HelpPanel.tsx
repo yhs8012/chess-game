@@ -4,7 +4,7 @@ import type { PieceSymbol } from 'chess.js'
 import type { ChessGame } from '../../hooks/useChessGame'
 import { helpContext } from './helpContext'
 import { PieceCard } from './PieceCard'
-import { CHECK_ALERT, HOW_TO, MODEL_CREDIT, OUTCOMES, PIECE_ORDER, PIECES, SPECIAL } from './rulesText.ko'
+import { CAPTURE_LIMITS, CHECK_ALERT, HOW_TO, MODEL_CREDIT, OUTCOMES, PIECE_ORDER, PIECES, SPECIAL } from './rulesText.ko'
 
 export function ModelCredit() {
   return (
@@ -118,6 +118,15 @@ export function HelpPanel({ g }: { g: ChessGame }) {
           {Object.values(SPECIAL).map((s) => (
             <p key={s.title}>
               <strong>{s.title}</strong> — {s.text}
+            </p>
+          ))}
+        </details>
+
+        <details className="help-section">
+          <summary>상대 말을 잡을 수 없는 경우</summary>
+          {CAPTURE_LIMITS.map((c) => (
+            <p key={c.title}>
+              <strong>{c.title}</strong> — {c.text}
             </p>
           ))}
         </details>

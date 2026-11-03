@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { applyMove, createGame, legalMoves } from '../../src/engine/game'
 import type { GameState } from '../../src/engine/game'
-import { blockReason, patternPreview, patternSquares } from '../../src/ui/help/blockReason'
+import { blockReason, explainBlock, patternPreview, patternSquares, pinnerOf } from '../../src/ui/help/blockReason'
 import { helpContext } from '../../src/ui/help/helpContext'
 
 function play(state: GameState, ...sans: string[]): GameState {
@@ -46,9 +46,10 @@ describe('막힌 이유', () => {
   it('폰 대각선에 잡을 말이 없으면 폰 전용 문구', () => {
     expect(blockReason(s0, 'e2', 'd3')).toBe('pawnNeedsCapture')
   })
-  it('핀 걸린 말 → 이 수를 두면 내 킹이 체크당해요', () => {
+  it('핀 걸린 말 → pinned', () => {
     const s = createGame('4k3/4r3/8/8/8/8/4B3/4K3 w - - 0 1')
-    expect(blockReason(s, 'e2', 'd3')).toBe('selfCheck')
+    expect(blockReason(s, 'e2', 'd3')).toBe('pinned')
+    expect(pinnerOf(s, 'e2')).toBe('e7')
   })
   it('체크 중 → 지금은 체크부터 해결해야 해요', () => {
     const s = play(createGame(), 'e4', 'f5', 'Qh5+')
@@ -59,6 +60,51 @@ describe('막힌 이유', () => {
     const p = patternPreview(s0, 'b1')!
     expect(p.legal.sort()).toEqual(['a3', 'c3'])
     expect([...p.blocked.entries()]).toEqual([['d2', 'ownPiece']])
+  })
+})
+
+describe('상대 말을 잡을 수 없는 경우', () => {
+  // 사용자 제보 배치: 백 Kd3·Bd4, 흑 Rd8이 d파일에 일렬 → d4 비숍은 핀
+  const reported = createGame('2Nr2k1/pp6/4Nb2/7p/3B4/1P1K4/P1P4P/8 w - - 0 1')
+
+  it('핀 걸린 비숍은 상대 비숍(f6)을 잡을 수 없다 — chess.js 판정', () => {
+    expect(legalMoves(reported, 'd4')).toHaveLength(0)
+    expect(blockReason(reported, 'd4', 'f6')).toBe('pinned')
+  })
+
+  it('안내 문장은 핀을 건 말과 칸을 알려 준다', () => {
+    expect(explainBlock(reported, 'd4', 'f6')).toBe(
+      'd4 비숍은 핀에 걸려 있어요. 움직이면 d8 룩이 내 킹을 공격해요.',
+    )
+  })
+
+  it('핀이어도 같은 선 위의 공격자를 잡는 것은 된다', () => {
+    // 백 Kd1·Rd2, 흑 Rd4: d2 룩은 핀이지만 d파일을 따라 d4 룩을 잡을 수 있다
+    const s = createGame('4k3/8/8/8/3r4/8/3R4/3K4 w - - 0 1')
+    expect(pinnerOf(s, 'd2')).toBe('d4')
+    expect(blockReason(s, 'd2', 'd4')).toBeNull()
+    expect(blockReason(s, 'd2', 'e2')).toBe('pinned')
+  })
+
+  it('킹은 지켜지는 말을 잡을 수 없다', () => {
+    const s = createGame('4r1k1/8/8/8/8/8/4p3/4K3 w - - 0 1')
+    expect(blockReason(s, 'e1', 'e2')).toBe('kingProtected')
+    expect(explainBlock(s, 'e1', 'e2')).toBe('e2 폰은 상대가 지키고 있어서 킹이 잡을 수 없어요.')
+  })
+
+  it('킹은 공격받는 칸으로 못 간다', () => {
+    const s = createGame('3r2k1/8/8/8/8/8/8/4K3 w - - 0 1')
+    expect(blockReason(s, 'e1', 'd1')).toBe('kingAttacked')
+  })
+
+  it('움직이는 모양이 아니면 notPattern (킹 안전 문구로 잘못 안내하지 않음)', () => {
+    expect(blockReason(createGame(), 'c1', 'c3')).toBe('notPattern')
+    expect(explainBlock(createGame(), 'c1', 'c3')).toContain('비숍은 c3 쪽으로 움직일 수 없어요')
+  })
+
+  it('킹 두 칸 가로는 캐슬링 안내', () => {
+    expect(blockReason(createGame(), 'e1', 'g1')).toBe('ownPiece')
+    expect(blockReason(createGame('4k3/8/8/8/8/8/8/4K2R w - - 0 1'), 'e1', 'c1')).toBe('castleOnly')
   })
 })
 

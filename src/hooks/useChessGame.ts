@@ -16,6 +16,7 @@ import { createEventBus } from '../engine/events'
 import type { DrawReason, GameEvent } from '../engine/events'
 import type { AiRequest, AiResponse } from '../engine/ai.worker'
 import { lockDuration, T } from '../effects/timing'
+import { explainBlock } from '../ui/help/blockReason'
 import { createStore } from './store'
 import { settingsStore } from './settings'
 
@@ -43,6 +44,16 @@ export interface Clock {
   since: number | null
 }
 
+/** ?debug&fen=... 주소에서만: 테스트용으로 그 배치에서 시작 */
+function debugFen(): string | null {
+  try {
+    const q = new URLSearchParams(location.search)
+    return q.has('debug') ? q.get('fen') : null
+  } catch {
+    return null
+  }
+}
+
 let nonce = 0
 const next = () => ++nonce
 
@@ -63,11 +74,15 @@ function presetFor(config: MatchConfig): CameraPreset {
 
 export function useChessGame() {
   const [config, setConfig] = useState<MatchConfig>(matchConfig)
-  const [game, setGame] = useState<GameState>(() => createGame())
+  const [game, setGame] = useState<GameState>(() => createGame(debugFen() ?? undefined))
   const [selected, setSelected] = useState<Square | null>(null)
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null)
   const [flash, setFlash] = useState<{ from: Square; to: Square; nonce: number } | null>(null)
   const [shake, setShake] = useState<{ square: Square; nonce: number } | null>(null)
+  /** 잘못된 수를 두려 했을 때 "왜 안 되는지" 한 줄 안내 */
+  const [notice, setNotice] = useState<{ text: string; nonce: number } | null>(null)
+  // 안내의 자동 닫힘 타이머가 렌더마다 다시 시작되지 않도록 고정된 함수로
+  const dismissNotice = useCallback(() => setNotice(null), [])
   const [end, setEnd] = useState<EndState | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [aiThinking, setAiThinking] = useState(false)
@@ -168,11 +183,14 @@ export function useChessGame() {
       if (!r.ok) {
         for (const e of r.events) gameBus.emit(e)
         setShake({ square: input.from, nonce: next() })
+        const text = explainBlock(current, input.from, input.to)
+        if (text) setNotice({ text, nonce: next() })
         busyUntil.current = performance.now() + lockDuration(r.events) * 1000
         return false
       }
       setGame(r.state)
       setLastAction('move')
+      setNotice(null)
       setSelected(null)
       setPendingPromotion(null)
       busyUntil.current = performance.now() + lockDuration(r.events) * 1000
@@ -340,6 +358,8 @@ export function useChessGame() {
     pendingPromotion,
     flash,
     shake,
+    notice,
+    dismissNotice,
     end,
     helpOpen,
     setHelpOpen,
